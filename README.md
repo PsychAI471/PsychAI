@@ -1,37 +1,177 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PsychAI - Advanced AI-Powered Mental Wellness Platform
 
-## Getting Started
+PsychAI is a comprehensive mental health and psychology assistant that provides 24/7 support, personalized care, and evidence-based therapeutic interventions through advanced AI technology.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 🤖 Advanced AI Therapy
+- **Professional Therapeutic AI** with advanced reasoning capabilities
+- **Chain of Thought, Tree of Thoughts, and Self-Consistency** reasoning
+- **Adaptive conversation flow** that reduces questions as conversations deepen
+- **Context-aware responses** that build on previous conversations
+- **Professional therapeutic language** without validation pressure
+- **Throttling system** to prevent overwhelming users
+- **Journaling prompts** for deeper reflection
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 📊 Analytics & Insights Dashboard
+- **Real-time mood tracking** with 1-10 scale and notes
+- **Mood trend visualization** over time
+- **Session analytics** including duration and message count
+- **Progress tracking** with key metrics
+- **Personalized insights** based on conversation patterns
+- **Wellness score calculation** and trend analysis
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🧠 Advanced AI Features
+- **Emotion Detection** from conversation analysis
+- **Cognitive Bias Detection** (Catastrophizing, All-or-Nothing Thinking, Mind Reading)
+- **Pattern Recognition** for recurring themes and triggers
+- **Personalized Insights** with actionable recommendations
+- **Sentiment Analysis** and emotional intelligence scoring
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 💬 Enhanced Chat Experience
+- **Session duration tracking** with real-time updates
+- **Message count monitoring** for engagement insights
+- **Professional therapeutic interface** with calming design
+- **Responsive design** for all devices
+- **Accessibility features** for inclusive use
 
-## Learn More
+### 🔐 Security & Privacy
+- **End-to-end encryption** for all conversations
+- **Supabase authentication** with secure user management
+- **Data privacy controls** and user consent
+- **HIPAA-compliant** data handling practices
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ Technology Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Groq AI API
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **AI/ML**: Groq LLM with advanced reasoning techniques
+- **Deployment**: Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📦 Installation
 
-## Deploy on Vercel
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/psych-ai.git
+   cd psych-ai
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# PsychAI
+3. **Set up environment variables**
+   Create a `.env.local` file with:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_ANON_KEY=your_supabase_service_key
+   GROQ_API_KEY=your_groq_api_key
+   ```
+
+4. **Set up Supabase database**
+   - Create a new Supabase project
+   - Run the migration file: `supabase/migrations/20250724121142_init_chat_tables.sql`
+   - This creates tables for users, chat sessions, messages, journal entries, mood entries, and session analytics
+
+5. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+## 🗄️ Database Schema
+
+### Core Tables
+- **users**: User profiles and authentication data
+- **chat_sessions**: Individual therapy sessions
+- **chat_messages**: All conversation messages with AI
+- **journal_entries**: User reflection and journaling
+- **mood_entries**: Daily mood tracking with scores and notes
+- **session_analytics**: Session duration and engagement metrics
+
+## 🎯 Key Features Explained
+
+### Advanced AI Reasoning
+The AI uses three advanced reasoning techniques:
+1. **Chain of Thought**: Step-by-step logical analysis
+2. **Tree of Thoughts**: Multiple perspective consideration
+3. **Self-Consistency**: Validation against conversation context
+
+### Adaptive Conversation Flow
+- **Early conversations** (1-3 messages): Focus on problem identification
+- **Mid conversations** (4-8 messages): Balanced insights and support
+- **Deep conversations** (9+ messages): Primarily supportive insights
+
+### Analytics Dashboard
+- **Mood Tracking**: Daily mood scores with trend visualization
+- **Session Analytics**: Duration, message count, and engagement metrics
+- **Progress Insights**: Personalized recommendations and growth tracking
+- **Pattern Recognition**: Identification of recurring themes and triggers
+
+## 🚀 Deployment
+
+1. **Deploy to Vercel**
+   ```bash
+   vercel --prod
+   ```
+
+2. **Set up environment variables** in Vercel dashboard
+
+3. **Configure Supabase** for production
+
+## 🔧 Configuration
+
+### AI Model Configuration
+The system uses Groq's Llama3-70b-8192 model with:
+- Streaming responses for real-time interaction
+- Context window of 8 messages for conversation history
+- Adaptive system prompts based on conversation depth
+
+### Analytics Configuration
+- Session data is automatically tracked
+- Mood entries are stored with timestamps
+- Analytics are calculated in real-time
+
+## 📈 Usage Analytics
+
+The platform tracks:
+- **Session duration** and frequency
+- **Message count** and engagement
+- **Mood trends** over time
+- **User progress** and patterns
+- **Feature usage** and preferences
+
+## 🔒 Privacy & Security
+
+- All data is encrypted in transit and at rest
+- User authentication through Supabase Auth
+- GDPR and HIPAA compliant data handling
+- User control over data retention and deletion
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+For support, email support@psychai.com or create an issue in the GitHub repository.
+
+## 🏥 Medical Disclaimer
+
+PsychAI is designed to provide mental wellness support and is not a replacement for professional medical or psychiatric care. Always consult with qualified healthcare providers for medical advice and treatment.
+
+---
+
+**Built with ❤️ for mental wellness**

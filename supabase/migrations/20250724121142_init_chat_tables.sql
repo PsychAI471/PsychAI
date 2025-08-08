@@ -23,3 +23,30 @@ create table chat_messages (
   content text not null,
   created_at timestamptz DEFAULT now()
 );
+
+-- Journal entries table
+create table journal_entries (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid references users(id) on delete cascade,
+  entry text not null,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Mood entries table for tracking user mood
+create table mood_entries (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid references users(id) on delete cascade,
+  mood_score integer check (mood_score >= 1 and mood_score <= 10),
+  notes text,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Session analytics table for tracking session data
+create table session_analytics (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid references users(id) on delete cascade,
+  duration integer,
+  message_count integer,
+  session_date timestamptz,
+  created_at timestamptz DEFAULT now()
+);
