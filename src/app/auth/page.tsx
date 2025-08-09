@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
@@ -14,34 +14,67 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Debug environment variables
+  useEffect(() => {
+    console.log('Auth Page Environment Debug:');
+    console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    console.log('Supabase client available:', !!supabase);
+  }, []);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    let result;
-    if (tab === 'login') {
-      result = await supabase.auth.signInWithPassword({ email, password });
-    } else {
-      result = await supabase.auth.signUp({ email, password });
-      if (!result.error && result.data?.user) {
-        // Insert into your users table
-        await supabase.from('users').insert([
-          {
-            id: result.data.user.id,
-            email: result.data.user.email,
-            full_name: fullName,
-            avatar_url: avatarUrl,
-            bio: bio,
-          },
-        ]);
+    
+    try {
+      console.log('Starting authentication process...');
+      console.log('Supabase client:', !!supabase);
+      
+      let result;
+      if (tab === 'login') {
+        console.log('Attempting login...');
+        result = await supabase.auth.signInWithPassword({ email, password });
+      } else {
+        console.log('Attempting signup...');
+        result = await supabase.auth.signUp({ email, password });
+        
+        if (!result.error && result.data?.user) {
+          console.log('User created, inserting profile...');
+          // Insert into your users table
+          const profileResult = await supabase.from('users').insert([
+            {
+              id: result.data.user.id,
+              email: result.data.user.email,
+              full_name: fullName,
+              avatar_url: avatarUrl,
+              bio: bio,
+            },
+          ]);
+          
+          if (profileResult.error) {
+            console.error('Profile creation error:', profileResult.error);
+            setError(`Account created but profile setup failed: ${profileResult.error.message}`);
+            setLoading(false);
+            return;
+          }
+          console.log('Profile created successfully');
+        }
       }
+      
+      if (result.error) {
+        console.error('Authentication error:', result.error);
+        setError(result.error.message);
+      } else {
+        console.log('Authentication successful, redirecting...');
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error('Unexpected error during authentication:', error);
+      setError(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setLoading(false);
     }
-    if (result.error) {
-      setError(result.error.message);
-    } else {
-      router.push("/dashboard");
-    }
-    setLoading(false);
   };
 
   return (
