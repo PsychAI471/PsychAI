@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Count user messages to adjust approach
-  const userMessageCount = messages.filter((m: any) => m.role === 'user').length;
+  const userMessageCount = messages.filter((m: { role: string }) => m.role === 'user').length;
   
   // Adjust system prompt based on conversation depth with advanced reasoning
   let systemPrompt = '';
@@ -99,71 +99,76 @@ REASONING PROCESS:
   };
 
   // Fetch from Groq API with streaming
-  const groqRes = await fetch(GROQ_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-    },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const groqRes = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify(payload),
+    });
 
-  if (!groqRes.body) {
-    return new Response('No response body from Groq', { status: 500 });
-  }
+    if (!groqRes.body) {
+      return new Response('No response body from Groq', { status: 500 });
+    }
 
-  // Stream the response to the client and collect the full assistant message
-  const encoder = new TextEncoder();
-  let aiContent = '';
-  const stream = new ReadableStream({
-    async start(controller) {
-      const reader = groqRes.body!.getReader();
-      let buffer = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = new TextDecoder().decode(value);
-        buffer += chunk;
-        // Groq streams OpenAI-compatible data: lines starting with 'data: '
-        const lines = buffer.split('\n');
-        buffer = lines.pop()!; // last line may be incomplete
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.replace('data: ', '').trim();
-            if (data === '[DONE]') {
-              controller.close();
-              break;
-            }
-            try {
-              const parsed = JSON.parse(data);
-              const delta = parsed.choices?.[0]?.delta?.content || '';
-              if (delta) {
-                aiContent += delta;
-                controller.enqueue(encoder.encode(delta));
+    // Stream the response to the client and collect the full assistant message
+    const encoder = new TextEncoder();
+    let aiContent = '';
+    const stream = new ReadableStream({
+      async start(controller) {
+        const reader = groqRes.body!.getReader();
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = new TextDecoder().decode(value);
+          buffer += chunk;
+          // Groq streams OpenAI-compatible data: lines starting with 'data: '
+          const lines = buffer.split('\n');
+          buffer = lines.pop()!; // last line may be incomplete
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.replace('data: ', '').trim();
+              if (data === '[DONE]') {
+                controller.close();
+                break;
               }
-            } catch (e) {
-              // ignore malformed lines
+              try {
+                const parsed = JSON.parse(data);
+                const delta = parsed.choices?.[0]?.delta?.content || '';
+                if (delta) {
+                  aiContent += delta;
+                  controller.enqueue(encoder.encode(delta));
+                }
+              } catch {
+                // ignore malformed lines
+              }
             }
           }
         }
-      }
-      // Store assistant message in Supabase after streaming
-      if (aiContent) {
-        await supabase.from('chat_messages').insert([
-          {
-            session_id: sessionId,
-            role: 'assistant',
-            content: aiContent,
-          },
-        ]);
-      }
-    },
-  });
+        // Store assistant message in Supabase after streaming
+        if (aiContent) {
+          await supabase.from('chat_messages').insert([
+            {
+              session_id: sessionId,
+              role: 'assistant',
+              content: aiContent,
+            },
+          ]);
+        }
+      },
+    });
 
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Transfer-Encoding': 'chunked',
-    },
-  });
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Transfer-Encoding': 'chunked',
+      },
+    });
+  } catch (error) {
+    console.error('Error calling Groq API:', error);
+    return Response.json({ error: 'Failed to get AI response' }, { status: 500 });
+  }
 } 

@@ -1,12 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import VoiceInteraction from './VoiceInteraction';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 interface AIFeaturesProps {
   userId: string;
@@ -168,8 +162,8 @@ export default function AIFeatures({ userId }: AIFeaturesProps) {
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Emotion Analysis</h3>
-            <p className="text-gray-600 mb-6">
-              AI analysis of emotional patterns in your conversations
+            <p className="text-gray-600">
+              Our AI analyzes your emotional patterns and provides insights into your mental wellness journey.
             </p>
             <div className="space-y-4">
               {emotionData.map((emotion, index) => (
@@ -336,7 +330,7 @@ export default function AIFeatures({ userId }: AIFeaturesProps) {
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <h4 className="font-semibold text-blue-800 mb-2">Progress Highlight</h4>
                 <p className="text-blue-700">
-                  Your mood has improved by 15% over the last 2 weeks. You're showing great progress in managing work-related stress.
+                  Your mood has improved by 15% over the last 2 weeks. You&apos;re showing great progress in managing work-related stress.
                 </p>
               </div>
               

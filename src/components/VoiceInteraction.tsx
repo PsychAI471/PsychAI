@@ -10,14 +10,13 @@ interface VoiceInteractionProps {
 
 export default function VoiceInteraction({ 
   onTranscript, 
-  onSpeak, 
   isListening, 
   onListeningChange 
 }: VoiceInteractionProps) {
   const [isSupported, setIsSupported] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
   const synthesisRef = useRef<SpeechSynthesis | null>(null);
 
   useEffect(() => {
@@ -35,7 +34,7 @@ export default function VoiceInteraction({
 
       // Check if using Brave browser
       const isBrave = navigator.brave?.isBrave() || 
-                     (navigator as any).brave?.isBrave() || 
+                     (navigator as any).brave?.isBrave() || // eslint-disable-line @typescript-eslint/no-explicit-any
                      window.chrome?.webstore || 
                      /Brave/.test(navigator.userAgent);
       
@@ -53,51 +52,38 @@ export default function VoiceInteraction({
 
     // Initialize speech recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.continuous = true;
+    recognitionRef.current.interimResults = true;
+    recognitionRef.current.lang = 'en-US';
 
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        onTranscript(transcript);
-        onListeningChange(false);
-      };
+    recognitionRef.current.onstart = () => {
+      setError(null);
+      onListeningChange(true);
+    };
 
-      recognitionRef.current.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        
-        // Handle specific error types with user-friendly messages
-        let errorMessage = '';
-        switch (event.error) {
-          case 'network':
-            errorMessage = 'Network error: Please check your internet connection and try again.';
-            break;
-          case 'not-allowed':
-            errorMessage = 'Microphone access denied: Please allow microphone permissions in your browser.';
-            break;
-          case 'no-speech':
-            errorMessage = 'No speech detected: Please speak clearly and try again.';
-            break;
-          case 'audio-capture':
-            errorMessage = 'Audio capture error: Please check your microphone and try again.';
-            break;
-          case 'service-not-allowed':
-            errorMessage = 'Speech recognition service not available: Please try again later.';
-            break;
-          default:
-            errorMessage = `Voice recognition error: ${event.error}. Please try again.`;
+    recognitionRef.current.onresult = (event: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
         }
-        
-        setError(errorMessage);
-        onListeningChange(false);
-      };
+      }
+      if (finalTranscript) {
+        onTranscript(finalTranscript);
+      }
+    };
 
-      recognitionRef.current.onend = () => {
-        onListeningChange(false);
-      };
-    }
+    recognitionRef.current.onerror = (event: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      console.error('Speech recognition error:', event.error);
+      setError(`Voice recognition error: ${event.error}`);
+      onListeningChange(false);
+    };
+
+    recognitionRef.current.onend = () => {
+      onListeningChange(false);
+    };
 
     // Initialize speech synthesis
     synthesisRef.current = window.speechSynthesis;
@@ -173,6 +159,10 @@ export default function VoiceInteraction({
     }
   };
 
+  const testVoice = () => {
+    speakText("Hello! I'm here to help you with your mental wellness journey. How are you feeling today?");
+  };
+
   if (!isSupported) {
     return (
       <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -185,166 +175,119 @@ export default function VoiceInteraction({
 
   return (
     <div className="space-y-4">
-      {/* Voice Input Controls */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={isListening ? stopListening : startListening}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
-            isListening
-              ? 'bg-red-600 text-white hover:bg-red-700'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
-          disabled={isSpeaking}
-        >
-          {isListening ? (
-            <>
-              <div className="w-4 h-4 bg-white rounded-full animate-pulse" />
-              Stop Listening
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-              Start Listening
-            </>
-          )}
-        </button>
-
-        {isListening && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <div className="flex gap-1">
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" />
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-            </div>
-            Listening...
-          </div>
-        )}
-      </div>
-
-      {/* Voice Output Controls */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => speakText("Hello! I'm here to help you with your mental wellness journey. How are you feeling today?")}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
-          disabled={isSpeaking || isListening}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-          </svg>
-          Test Voice
-        </button>
-
-        {isSpeaking && (
-          <>
-            <button
-              onClick={stopSpeaking}
-              className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Stop
-            </button>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              Speaking...
-            </div>
-          </>
-        )}
-
-        {/* Debug Button for Brave Users */}
-        <button
-          onClick={() => {
-            console.log('=== Voice Debug Info ===');
-            console.log('User Agent:', navigator.userAgent);
-            console.log('Speech Recognition Support:', 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
-            console.log('Speech Synthesis Support:', 'speechSynthesis' in window);
-            console.log('Microphone Permission:', navigator.permissions ? 'Available' : 'Not Available');
-            console.log('Is Brave:', navigator.brave?.isBrave() || /Brave/.test(navigator.userAgent));
-            console.log('Protocol:', window.location.protocol);
-            console.log('Host:', window.location.host);
-            console.log('========================');
-            alert('Debug info logged to console. Press F12 to view.');
-          }}
-          className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
-        >
-          🔧 Debug Info
-        </button>
-      </div>
-
-      {/* Error Display */}
+      <p className="text-sm text-gray-600 mb-4">
+        Voice features require microphone access and work best in Chrome, Edge, and Safari.
+      </p>
+      
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="text-red-800 text-sm mb-2">{error}</p>
-              {error.includes('Network error') && (
-                <div className="text-xs text-red-700 space-y-1">
-                  <p>• Check your internet connection</p>
-                  <p>• Try refreshing the page</p>
-                  <p>• Ensure you're using a supported browser (Chrome, Edge, Safari)</p>
-                </div>
-              )}
-              {error.includes('Microphone access denied') && (
-                <div className="text-xs text-red-700 space-y-1">
-                  <p>• Click the microphone icon in your browser's address bar</p>
-                  <p>• Select "Allow" for microphone access</p>
-                  <p>• Refresh the page and try again</p>
-                </div>
-              )}
-              {error.includes('Brave browser detected') && (
-                <div className="text-xs text-red-700 space-y-1">
-                  <p>• Go to Brave Settings → Shields & Privacy → Site and Shield Settings</p>
-                  <p>• Disable "Block fingerprinting" for this site</p>
-                  <p>• Allow microphone permissions in site settings</p>
-                  <p>• Try disabling Brave Shields temporarily</p>
-                  <p>• Consider using Chrome or Edge for voice features</p>
-                </div>
-              )}
-              {error.includes('Network error') && (
-                <div className="text-xs text-red-700 space-y-1">
-                  <p>• Check your internet connection</p>
-                  <p>• Try refreshing the page</p>
-                  <p>• Ensure you're using a supported browser (Chrome, Edge, Safari)</p>
-                  <p>• For Brave: Try disabling all Shields for this site</p>
-                  <p>• For Brave: Go to brave://settings/content/microphone and allow this site</p>
-                </div>
-              )}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+          <p className="text-red-800 text-sm font-medium mb-2">Voice Error:</p>
+          <p className="text-red-700 text-sm mb-3">{error}</p>
+          
+          {error.includes('network') && (
+            <div className="text-red-700 text-sm">
+              <p className="font-medium mb-1">Network Error Solutions:</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Check your internet connection</li>
+                <li>Try refreshing the page</li>
+                <li>Ensure you&apos;re using HTTPS</li>
+                <li>Check browser microphone permissions</li>
+              </ul>
             </div>
-            <button
-              onClick={() => setError(null)}
-              className="ml-2 text-red-600 hover:text-red-800"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          )}
+          
+          {error.includes('not-allowed') && (
+            <div className="text-red-700 text-sm">
+              <p className="font-medium mb-1">Permission Error Solutions:</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Click the microphone icon in your browser&apos;s address bar</li>
+                <li>Select &quot;Allow&quot; for microphone access</li>
+                <li>Refresh the page after granting permission</li>
+              </ul>
+            </div>
+          )}
+          
+          {error.includes('no-speech') && (
+            <div className="text-red-700 text-sm">
+              <p className="font-medium mb-1">No Speech Detected:</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Speak clearly and loudly</li>
+                <li>Check your microphone is working</li>
+                <li>Try again in a quieter environment</li>
+              </ul>
+            </div>
+          )}
+          
+          {error.includes('audio-capture') && (
+            <div className="text-red-700 text-sm">
+              <p className="font-medium mb-1">Audio Capture Error:</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Check microphone is connected and working</li>
+                <li>Try a different microphone</li>
+                <li>Check system audio settings</li>
+              </ul>
+            </div>
+          )}
+          
+          {error.includes('service-not-allowed') && (
+            <div className="text-red-700 text-sm">
+              <p className="font-medium mb-1">Service Not Allowed:</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>This usually means the browser blocked the feature</li>
+                <li>Try a different browser (Chrome, Edge, Safari)</li>
+                <li>Check browser security settings</li>
+              </ul>
+            </div>
+          )}
         </div>
       )}
-
-      {/* Voice Settings */}
-      <div className="p-4 bg-gray-50 rounded-lg">
-        <h4 className="font-medium text-gray-800 mb-2">Voice Settings</h4>
-        <div className="space-y-2 text-sm text-gray-600">
-          <p>• Click "Start Listening" to speak your message</p>
-          <p>• Click "Test Voice" to hear AI responses</p>
-          <p>• Voice features work best in quiet environments</p>
-          <p>• Speak clearly and at a normal pace</p>
-          <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
-            <p className="text-yellow-800 text-xs font-medium mb-1">Brave Browser Users:</p>
-            <p className="text-yellow-700 text-xs mb-2">Voice features may require additional setup:</p>
-            <div className="text-yellow-700 text-xs space-y-1">
-              <p>1. Disable fingerprinting protection for this site</p>
-              <p>2. Go to brave://settings/content/microphone and allow this site</p>
-              <p>3. Try disabling all Brave Shields temporarily</p>
-              <p>4. Check if HTTPS is required (try https:// instead of http://)</p>
-              <p>5. Consider using Chrome or Edge for voice features</p>
-            </div>
-          </div>
-        </div>
+      
+      <div className="space-y-3">
+        <button
+          onClick={startListening}
+          disabled={isListening}
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+        >
+          {isListening ? 'Listening...' : 'Start Listening'}
+        </button>
+        
+        {isListening && (
+          <button
+            onClick={stopListening}
+            className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition"
+          >
+            Stop Listening
+          </button>
+        )}
+        
+        <button
+          onClick={testVoice}
+          disabled={isSpeaking}
+          className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+        >
+          {isSpeaking ? 'Speaking...' : 'Test Voice Output'}
+        </button>
+        
+        {isSpeaking && (
+          <button
+            onClick={stopSpeaking}
+            className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition"
+          >
+            Stop Speaking
+          </button>
+        )}
+      </div>
+      
+      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+        <p className="text-sm text-gray-700 mb-2">
+          <strong>Brave Browser Users:</strong> If you&apos;re experiencing issues:
+        </p>
+        <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+          <li>Disable fingerprinting protection for this site</li>
+          <li>Check microphone permissions in Brave settings</li>
+          <li>Try disabling Brave shields temporarily</li>
+          <li>Ensure you&apos;re using HTTPS</li>
+        </ul>
       </div>
     </div>
   );

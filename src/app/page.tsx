@@ -1,8 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import ChatUI from "../components/ChatUI";
 
 const NAV_LINKS = [
   { name: "Features", href: "#features" },
@@ -66,27 +64,6 @@ const HOW_IT_WORKS = [
   },
 ];
 
-const TESTIMONIALS = [
-  {
-    name: "Alex J.",
-    quote:
-      "PsychAI helped me understand my emotions and gave me practical tools to manage stress. It feels like having a therapist in my pocket!",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-  },
-  {
-    name: "Samantha R.",
-    quote:
-      "The mood tracker and daily check-ins keep me accountable and aware. I love the privacy and science-backed approach!",
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-  },
-  {
-    name: "Chris P.",
-    quote:
-      "I was skeptical at first, but PsychAI’s suggestions are spot-on and genuinely helpful. Highly recommended!",
-    avatar: "https://randomuser.me/api/portraits/men/65.jpg",
-  },
-];
-
 const PRICING = [
   {
     tier: "Free",
@@ -114,16 +91,6 @@ const PRICING = [
 ];
 
 export default function Home() {
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  useEffect(() => {
-    let sid = window.localStorage.getItem("psychai-session-id");
-    if (!sid) {
-      sid = crypto.randomUUID();
-      window.localStorage.setItem("psychai-session-id", sid);
-    }
-    setSessionId(sid);
-  }, []);
-
   return (
     <div className="bg-gradient-to-b from-blue-100 via-purple-50 to-teal-50 min-h-screen flex flex-col">
       {/* Header */}

@@ -87,13 +87,16 @@ declare global {
     webkitSpeechRecognition: new () => SpeechRecognition;
     speechSynthesis: SpeechSynthesis;
     chrome?: {
-      webstore?: any;
+      webstore?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     };
   }
 
   interface Navigator {
-    brave?: {
-      isBrave(): boolean;
+    readonly speechSynthesis: SpeechSynthesis;
+    readonly webkitSpeechRecognition: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    readonly SpeechRecognition: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    readonly brave?: {
+      isBrave(): any; // eslint-disable-line @typescript-eslint/no-explicit-any
     };
   }
 }

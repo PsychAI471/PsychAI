@@ -19,9 +19,7 @@ export default function ChatUI({ sessionId }: ChatUIProps) {
   const [throttled, setThrottled] = useState(false);
   const [showJournal, setShowJournal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showVoice, setShowVoice] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
-  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -33,7 +31,6 @@ export default function ChatUI({ sessionId }: ChatUIProps) {
   useEffect(() => {
     // Start session timer when component mounts
     const startTime = new Date();
-    setSessionStartTime(startTime);
     
     // Update session duration every minute
     const interval = setInterval(() => {
@@ -43,14 +40,6 @@ export default function ChatUI({ sessionId }: ChatUIProps) {
 
     return () => clearInterval(interval);
   }, []); // Empty dependency array - only run once on mount
-
-  // Check if challenge mode is enabled
-  const isChallengeMode = () => {
-    if (typeof window !== 'undefined') {
-      return JSON.parse(localStorage.getItem('psychai-challenge-mode') || 'false');
-    }
-    return false;
-  };
 
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -96,7 +85,7 @@ export default function ChatUI({ sessionId }: ChatUIProps) {
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let aiMsg: Message = { role: 'assistant', content: '' };
+    const aiMsg: Message = { role: 'assistant', content: '' };
     setMessages((prev) => [...prev, aiMsg]);
     let done = false;
     while (!done) {
@@ -179,9 +168,9 @@ export default function ChatUI({ sessionId }: ChatUIProps) {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowVoice(!showVoice)}
+            onClick={() => setIsListening(!isListening)}
             className={`p-2 rounded-lg transition ${
-              showVoice 
+              isListening 
                 ? 'bg-blue-100 text-blue-600' 
                 : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100'
             }`}
@@ -204,7 +193,7 @@ export default function ChatUI({ sessionId }: ChatUIProps) {
       </div>
 
       {/* Voice Interaction Panel */}
-      {showVoice && (
+      {isListening && (
         <div className="p-4 border-b border-slate-200 bg-blue-50">
           <VoiceInteraction
             onTranscript={handleVoiceTranscript}
@@ -222,7 +211,7 @@ export default function ChatUI({ sessionId }: ChatUIProps) {
             <div className="text-4xl mb-4">🧠</div>
             <h3 className="text-lg font-medium mb-2">Welcome to PsychAI</h3>
             <p className="text-sm">Start a conversation to begin your mental wellness journey</p>
-            {showVoice && (
+            {isListening && (
               <p className="text-sm text-blue-600 mt-2">💡 Try using voice input for hands-free interaction!</p>
             )}
           </div>
