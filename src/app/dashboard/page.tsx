@@ -1,16 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
 import ChatUI from "../../components/ChatUI";
 import Link from "next/link";
 import Analytics from "../../components/Analytics";
 import AIFeatures from "../../components/AIFeatures";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from "../../lib/supabase";
 
 export default function DashboardPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
